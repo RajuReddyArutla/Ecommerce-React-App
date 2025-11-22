@@ -1,89 +1,7 @@
 
-// import { PaginatedResponse } from '@/types/api.types';
-// import { adminApi } from './api.service';
-// import { User, UserStatistics } from '@/types/user.types';
-// import { Order } from '@/types/order.types';
-// import { Product } from '@/types/product.types';
+///////////////////imp
 
-// export const adminService = {
-//   // Get all users with pagination
-//   async getUsers(page = 1, limit = 20): Promise<PaginatedResponse<User>> {
-//     console.log('🔄 [AdminService] Fetching users:', { page, limit, baseURL: adminApi.defaults.baseURL });
-    
-//     try {
-//       const response = await adminApi.get<PaginatedResponse<User>>('/admin/users', {
-//         params: { page, limit },
-//       });
-//       console.log('✅ [AdminService] Users response:', response.data);
-//       return response.data;
-//     } catch (error: any) {
-//       console.error('❌ [AdminService] Users error:', {
-//         status: error.response?.status,
-//         statusText: error.response?.statusText,
-//         data: error.response?.data,
-//         url: error.config?.url
-//       });
-//       throw error;
-//     }
-//   },
-
-//   // Get user statistics
-//   async getUserStatistics(): Promise<UserStatistics> {
-//     console.log('🔄 [AdminService] Fetching statistics...');
-    
-//     try {
-//       const response = await adminApi.get<UserStatistics>('/admin/users/statistics');
-//       console.log('✅ [AdminService] Statistics response:', response.data);
-//       return response.data;
-//     } catch (error: any) {
-//       console.error('❌ [AdminService] Statistics error:', {
-//         status: error.response?.status,
-//         statusText: error.response?.statusText,
-//         data: error.response?.data,
-//         url: error.config?.url
-//       });
-//       throw error;
-//     }
-//   },
-
-//   // Update user role
-//   async updateUserRole(userId: number, role: string): Promise<User> {
-//     const response = await adminApi.put<User>(`/admin/users/${userId}/role`, {
-//       role,
-//     });
-//     return response.data;
-//   },
-
-//   // Delete user
-//   async deleteUser(userId: number): Promise<void> {
-//     await adminApi.delete(`/admin/users/${userId}`);
-//   },
-
-//   // NEW: Get all products with pagination
-//   async getProducts(page = 1, limit = 20): Promise<PaginatedResponse<Product>> {
-//     console.log('🔄 [AdminService] Fetching products:', { page, limit });
-//     const response = await adminApi.get<PaginatedResponse<Product>>('/admin/products', {
-//       params: { page, limit },
-//     });
-//     console.log('✅ [AdminService] Products response:', response.data);
-//     return response.data;
-//   },
-
-//   // NEW: Get all orders with pagination
-//   async getOrders(page = 1, limit = 20): Promise<PaginatedResponse<Order>> {
-//     console.log('🔄 [AdminService] Fetching orders:', { page, limit });
-//     const response = await adminApi.get<PaginatedResponse<Order>>('/admin/orders', {
-//       params: { page, limit },
-//     });
-//     console.log('✅ [AdminService] Orders response:', response.data);
-//     return response.data;
-//   },
-
-// };
-
-// src/services/adminService.ts - COMPLETE VERSION
 import axios from 'axios';
-import { UserStatistics } from '@/types/user.types';
 
 const USER_API_URL = import.meta.env.VITE_USER_API_URL || 'http://localhost:3002';
 const PRODUCT_API_URL = import.meta.env.VITE_PRODUCT_API_URL || 'http://localhost:3006';
@@ -95,7 +13,7 @@ console.log('🔧 Admin Service initialized with URLs:', {
   ORDER_API_URL,
 });
 
-// ✅ Create separate axios instances for each service
+// Create axios instances
 const userApi = axios.create({
   baseURL: USER_API_URL,
   headers: { 'Content-Type': 'application/json' },
@@ -111,101 +29,119 @@ const orderApi = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// ✅ Add token interceptor to ALL instances
-const addAuthInterceptor = (api: any, serviceName: string) => {
+// Add token to all requests
+[userApi, productApi, orderApi].forEach((api) => {
   api.interceptors.request.use(
-    (config: any) => {
+    (config) => {
       const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-      console.log(`📤 ${serviceName} API Request:`, {
+      console.log('📤 Admin API Request:', {
         url: config.url,
         method: config.method,
         baseURL: config.baseURL,
       });
       return config;
     },
-    (error: any) => {
-      console.error(`❌ ${serviceName} Request error:`, error);
-      return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
   );
 
   api.interceptors.response.use(
-    (response: any) => {
-      console.log(`✅ ${serviceName} API Response:`, {
+    (response) => {
+      console.log('✅ Admin API Response:', {
         url: response.config.url,
         status: response.status,
         data: response.data,
       });
       return response;
     },
-    (error: any) => {
-      console.error(`❌ ${serviceName} API Error:`, {
-        url: error.config?.url,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-
+    (error) => {
+      console.error('❌ Admin API Error:', error);
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
       }
-
       return Promise.reject(error);
     }
   );
+});
+
+// Helper function to extract data from response
+const extractData = (response: any) => {
+  // Handle different response formats
+  if (response.data?.data) {
+    // Format: { success: true, data: { data: [...], total: X } }
+    return response.data.data;
+  } else if (Array.isArray(response.data)) {
+    // Format: [...]
+    return response.data;
+  } else if (response.data) {
+    // Format: { data: [...] }
+    return response.data;
+  }
+  return [];
 };
 
-addAuthInterceptor(userApi, 'User');
-addAuthInterceptor(productApi, 'Product');
-addAuthInterceptor(orderApi, 'Order');
-
 export const adminService = {
-  // ==================== USER MANAGEMENT ====================
-  
-  async getUserStatistics(): Promise<UserStatistics> {
+  // ==================== USERS ====================
+  async getUsers(page = 1, limit = 20) {
+    console.log('🔄 Calling getUsers API...');
     try {
-      console.log('🔄 Calling getUserStatistics API...');
-      const response = await userApi.get('/admin/users/statistics');
-      
-      console.log('✅ Statistics API Response:', response.data);
-      
-      const data = response.data.data || response.data;
-      
-      return {
-        totalUsers: data.totalUsers || 0,
-        adminCount: data.adminCount || 0,
-        customerCount: data.customerCount || 0,
-        activeUsers: data.activeUsers || 0,
-        newUsersThisMonth: data.newUsersThisMonth || 0,
-      };
+      // Try /admin/users first
+      const response = await userApi.get('/admin/users', { params: { page, limit } });
+      const data = extractData(response);
+      console.log('✅ Users API Response:', { count: data.length || 0, data });
+      return data;
     } catch (error: any) {
-      console.error('❌ getUserStatistics error:', error);
+      // If that fails, try /users
+      if (error.response?.status === 404) {
+        console.log('⚠️ /admin/users not found, trying /users...');
+        const response = await userApi.get('/users', { params: { page, limit } });
+        const data = extractData(response);
+        console.log('✅ Users API Response:', { count: data.length || 0, data });
+        return data;
+      }
       throw error;
     }
   },
 
-  async getAllUsers(page = 1, limit = 10) {
+  async getUserById(userId: number) {
     try {
-      const response = await userApi.get('/admin/users', {
-        params: { page, limit },
-      });
-      return response.data.data || response.data;
-    } catch (error) {
-      console.error('❌ getAllUsers error:', error);
+      const response = await userApi.get(`/admin/users/${userId}`);
+      return extractData(response);
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        const response = await userApi.get(`/users/${userId}`);
+        return extractData(response);
+      }
       throw error;
     }
   },
 
-  async updateUserRole(userId: number, role: 'admin' | 'customer') {
+  async createUser(userData: any) {
     try {
-      const response = await userApi.put(`/admin/users/${userId}/role`, { role });
+      const response = await userApi.post('/admin/users', userData);
       return response.data;
-    } catch (error) {
-      console.error('❌ updateUserRole error:', error);
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        const response = await userApi.post('/users', userData);
+        return response.data;
+      }
+      throw error;
+    }
+  },
+
+  async updateUser(userId: number, userData: any) {
+    try {
+      const response = await userApi.put(`/admin/users/${userId}`, userData);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        const response = await userApi.put(`/users/${userId}`, userData);
+        return response.data;
+      }
       throw error;
     }
   },
@@ -214,136 +150,136 @@ export const adminService = {
     try {
       const response = await userApi.delete(`/admin/users/${userId}`);
       return response.data;
-    } catch (error) {
-      console.error('❌ deleteUser error:', error);
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        const response = await userApi.delete(`/users/${userId}`);
+        return response.data;
+      }
       throw error;
     }
   },
 
-  // ==================== PRODUCT MANAGEMENT ====================
-  
-  async getProducts(page = 1, limit = 10) {
-    try {
-      console.log('🔄 Calling getProducts API...');
-      const response = await productApi.get('/admin/products', {
-        params: { page, limit },
-      });
-      
-      console.log('✅ Products API Response:', response.data);
-      return response.data.data || response.data;
-    } catch (error) {
-      console.error('❌ getProducts error:', error);
-      throw error;
-    }
+  // ==================== PRODUCTS ====================
+  async getProducts(page = 1, limit = 20) {
+    console.log('🔄 Calling getProducts API...');
+    const response = await productApi.get('/products', { params: { page, limit } });
+    const data = extractData(response);
+    console.log('✅ Products API Response:', { count: data.length || 0, data });
+    return data;
   },
 
-  async getProduct(productId: number) {
-    try {
-      const response = await productApi.get(`/admin/products/${productId}`);
-      return response.data.data || response.data;
-    } catch (error) {
-      console.error('❌ getProduct error:', error);
-      throw error;
-    }
+  async getProductById(productId: number) {
+    const response = await productApi.get(`/products/${productId}`);
+    return extractData(response);
   },
 
   async createProduct(productData: any) {
-    try {
-      const response = await productApi.post('/admin/products', productData);
-      return response.data;
-    } catch (error) {
-      console.error('❌ createProduct error:', error);
-      throw error;
-    }
+    console.log('📦 Creating product:', productData);
+    const response = await productApi.post('/products', productData);
+    console.log('✅ Product created:', response.data);
+    return response.data;
   },
 
   async updateProduct(productId: number, productData: any) {
+    console.log('📝 Updating product:', productId, productData);
     try {
-      const response = await productApi.put(`/admin/products/${productId}`, productData);
+      // Try PUT first
+      const response = await productApi.put(`/products/${productId}`, productData);
+      console.log('✅ Product updated:', response.data);
       return response.data;
-    } catch (error) {
-      console.error('❌ updateProduct error:', error);
+    } catch (error: any) {
+      // If PUT fails with 404, try PATCH
+      if (error.response?.status === 404) {
+        console.log('⚠️ PUT failed, trying PATCH...');
+        const response = await productApi.patch(`/products/${productId}`, productData);
+        console.log('✅ Product updated with PATCH:', response.data);
+        return response.data;
+      }
       throw error;
     }
   },
 
   async deleteProduct(productId: number) {
-    try {
-      const response = await productApi.delete(`/admin/products/${productId}`);
-      return response.data;
-    } catch (error) {
-      console.error('❌ deleteProduct error:', error);
-      throw error;
-    }
+    console.log('🗑️ Deleting product:', productId);
+    const response = await productApi.delete(`/products/${productId}`);
+    console.log('✅ Product deleted');
+    return response.data;
   },
 
-  // ==================== ORDER MANAGEMENT ====================
-  
-  async getOrders(page = 1, limit = 10, status?: string) {
-    try {
-      console.log('🔄 Calling getOrders API...');
-      const params: any = { page, limit };
-      if (status) params.status = status;
-      
-      const response = await orderApi.get('/admin/orders', { params });
-      
-      console.log('✅ Orders API Response:', response.data);
-      return response.data.data || response.data;
-    } catch (error) {
-      console.error('❌ getOrders error:', error);
-      throw error;
-    }
+  // ==================== ORDERS ====================
+  async getOrders(page = 1, limit = 20) {
+    console.log('🔄 Calling getOrders API...');
+    const response = await orderApi.get('/orders', { params: { page, limit } });
+    const data = extractData(response);
+    console.log('✅ Orders API Response:', { count: data.length || 0, data });
+    return data;
   },
 
-  async getOrder(orderId: number) {
-    try {
-      const response = await orderApi.get(`/admin/orders/${orderId}`);
-      return response.data.data || response.data;
-    } catch (error) {
-      console.error('❌ getOrder error:', error);
-      throw error;
-    }
+  async getOrderById(orderId: number) {
+    const response = await orderApi.get(`/orders/${orderId}`);
+    return extractData(response);
   },
 
   async updateOrderStatus(orderId: number, status: string) {
-    try {
-      const response = await orderApi.put(`/admin/orders/${orderId}/status`, { status });
-      return response.data;
-    } catch (error) {
-      console.error('❌ updateOrderStatus error:', error);
-      throw error;
-    }
+    const response = await orderApi.patch(`/orders/${orderId}/status`, { status });
+    return response.data;
   },
 
   async deleteOrder(orderId: number) {
+    const response = await orderApi.delete(`/orders/${orderId}`);
+    return response.data;
+  },
+
+  // ==================== DASHBOARD STATS ====================
+  async getDashboardStats() {
+    console.log('📊 Fetching dashboard stats...');
+    
     try {
-      const response = await orderApi.delete(`/admin/orders/${orderId}`);
-      return response.data;
+      // Fetch all data
+      const [users, products, orders] = await Promise.all([
+        this.getUsers(1, 1000), // Get all users
+        this.getProducts(1, 1000), // Get all products
+        this.getOrders(1, 1000), // Get all orders
+      ]);
+
+      // Calculate stats
+      const totalUsers = Array.isArray(users) ? users.length : 0;
+      const adminUsers = Array.isArray(users) ? users.filter((u: any) => u.role === 'admin').length : 0;
+      const customers = Array.isArray(users) ? users.filter((u: any) => u.role === 'customer').length : 0;
+      const totalProducts = Array.isArray(products) ? products.length : 0;
+      const totalOrders = Array.isArray(orders) ? orders.length : 0;
+      const totalRevenue = Array.isArray(orders)
+        ? orders.reduce((sum: number, order: any) => sum + (Number(order.totalAmount) || 0), 0)
+        : 0;
+
+      const stats = {
+        totalUsers,
+        adminUsers,
+        customers,
+        activeUsers: 0, // You can calculate based on last login
+        totalProducts,
+        totalOrders,
+        totalRevenue,
+      };
+
+      console.log('✅ Dashboard stats:', stats);
+      return stats;
     } catch (error) {
-      console.error('❌ deleteOrder error:', error);
-      throw error;
+      console.error('❌ Failed to fetch dashboard stats:', error);
+      return {
+        totalUsers: 0,
+        adminUsers: 0,
+        customers: 0,
+        activeUsers: 0,
+        totalProducts: 0,
+        totalOrders: 0,
+        totalRevenue: 0,
+      };
     }
   },
 
-  // ==================== STATISTICS & ANALYTICS ====================
-  
-  async getProductStatistics() {
-    try {
-      const response = await productApi.get('/admin/products/statistics');
-      return response.data.data || response.data;
-    } catch (error) {
-      console.error('❌ getProductStatistics error:', error);
-      throw error;
-    }
-  },
-
-  async getOrderStatistics() {
-    try {
-      const response = await orderApi.get('/admin/orders/statistics');
-      return response.data.data || response.data;
-    } catch (error) {
-      console.error('❌ getOrderStatistics error:', error);
-      throw error;
-    }
+  // Alias for backward compatibility
+  async getUserStatistics() {
+    return this.getDashboardStats();
   },
 };

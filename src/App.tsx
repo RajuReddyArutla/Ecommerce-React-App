@@ -1,92 +1,127 @@
+
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { useAuthStore } from '@/store/authStore';
-import './index.css';
-
-// Layouts
-import AdminLayout from '@/components/shared/layout/AdminLayout';
-import CustomerLayout from '@/components/shared/layout/CustomerLayout';
+import { useAuthStore } from './store/authStore';
 
 // Auth Pages
-import LoginPage from '@/pages/auth/LoginPage';
-import RegisterPage from '@/pages/auth/RegisterPage';
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
 
-// Admin Pages
-import AdminDashboard from '@/pages/admin/dashboard/DashboardPage';
-import AdminProducts from '@/pages/admin/products/ProductsPage';
-import AdminOrders from '@/pages/admin/orders/OrdersPage';
-import AdminUsers from '@/pages/admin/users/UsersPage';
-import AdminSettings from '@/pages/admin/settings/SettingsPage';
+// Admin Layout & Pages
+import AdminLayout from './components/shared/layout/AdminLayout';
+import AdminDashboard from './pages/admin/dashboard/DashboardPage';
+import AdminUsers from './pages/admin/users/UsersPage';
+import AdminProducts from './pages/admin/products/ProductsPage';
+import AdminOrders from './pages/admin/orders/OrdersPage';
+import AdminSettings from './pages/admin/settings/SettingsPage';
 
-// Customer Pages
-import CustomerProducts from '@/pages/customer/products/ProductsPage';
-import CustomerCart from '@/pages/customer/cart/CartPage';
-import CustomerCheckout from '@/pages/customer/checkout/CheckoutPage';
-import CustomerOrders from '@/pages/customer/orders/OrdersPage';
-import CustomerProfile from '@/pages/customer/profile/ProfilePage';
+// Customer Layout & Pages
+// import CustomerLayout from './components/customer/CustomerLayout';
+// import CustomerDashboard from './pages/customer/dashboard/DashboardPage';
+import ProductsPage from './pages/customer/products/ProductsPage';
+import CartPage from './pages/customer/cart/CartPage';
+import CheckoutPage from './pages/customer/checkout/CheckoutPage';
+import OrdersPage from './pages/customer/orders/OrdersPage';
+import OrderDetailPage from './pages/customer/orders/OrderDetailPage';
+import ProfilePage from './pages/customer/profile/ProfilePage';
+import CustomerDashboard from './pages/customer/CustomerDashboard';
+import CustomerLayout from './components/customer/CustomerLayout';
 
-// Components
-import ProtectedRoute from '@/components/shared/ProtectedRoute';
-import { ROUTES } from '@/utils/constants';
+// Protected Route Component
+const ProtectedRoute: React.FC<{
+  children: React.ReactNode;
+  allowedRoles?: string[];
+}> = ({ children, allowedRoles }) => {
+  const { user, isAuthenticated } = useAuthStore();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    return <Navigate to={`/${user.role}/dashboard`} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Public Route (redirect if already logged in)
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isAuthenticated } = useAuthStore();
+
+  if (isAuthenticated && user) {
+    return <Navigate to={`/${user.role}/dashboard`} replace />;
+  }
+
+  return <>{children}</>;
+};
 
 function App() {
-  const { isAuthenticated, user } = useAuthStore();
-
-  // ✅ FIXED: Check user.role instead of user.isAdmin
-  const getInitialRoute = () => {
-    if (!isAuthenticated) return ROUTES.LOGIN;
-    return user?.role === 'admin' ? '/admin/dashboard' : '/customer/products';
-  };
-
   return (
     <BrowserRouter>
+      <Toaster position="top-right" />
       <Routes>
-        {/* Root - Redirect based on auth */}
-        <Route path="/" element={<Navigate to={getInitialRoute()} replace />} />
-
-        {/* Auth Routes */}
-        <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-        <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+        {/* Public Routes */}
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <RegisterPage />
+            </PublicRoute>
+          }
+        />
 
         {/* Admin Routes */}
         <Route
-          path="/admin/*"
+          path="/admin"
           element={
-            <ProtectedRoute requireAdmin>
+            <ProtectedRoute allowedRoles={['admin']}>
               <AdminLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
-          <Route path="users" element={<AdminUsers />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
         </Route>
 
         {/* Customer Routes */}
         <Route
-          path="/customer/*"
+          path="/customer"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['customer']}>
               <CustomerLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="products" replace />} />
-          <Route path="products" element={<CustomerProducts />} />
-          <Route path="cart" element={<CustomerCart />} />
-          <Route path="checkout" element={<CustomerCheckout />} />
-          <Route path="orders" element={<CustomerOrders />} />
-          <Route path="profile" element={<CustomerProfile />} />
+          <Route path="dashboard" element={<CustomerDashboard />} />
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="cart" element={<CartPage />} />
+          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
         </Route>
 
-        {/* 404 */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Root redirect */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        
+        {/* Catch all */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-      
-      <Toaster position="top-right" />
     </BrowserRouter>
   );
 }
