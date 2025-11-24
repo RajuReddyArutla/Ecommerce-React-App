@@ -1,167 +1,17 @@
-// // File 48: src/pages/admin/dashboard/DashboardPage.tsx
-// import { useEffect, useState } from 'react';
-// import { Users, ShoppingCart, Package, TrendingUp } from 'lucide-react';
-// import { adminService } from '@/services/adminService';
-// // import type { UserStatistics } from '@/types/user';
-// import toast from 'react-hot-toast';
-// import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-// import { UserStatistics } from '@/types/user.types';
 
-// interface StatCard {
-//   title: string;
-//   value: string | number;
-//   icon: React.ElementType;
-//   trend?: string;
-//   trendUp?: boolean;
-//   color: string;
-// }
-
-// export default function DashboardPage() {
-//   const [stats, setStats] = useState<UserStatistics | null>(null);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     loadStatistics();
-//   }, []);
-
-//   const loadStatistics = async () => {
-//     try {
-//       setLoading(true);
-//       const data = await adminService.getUserStatistics();
-//       setStats(data);
-//     } catch (error: any) {
-//       toast.error(error.response?.data?.message || 'Failed to load statistics');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   if (loading) {
-//     return <LoadingSpinner fullScreen />;
-//   }
-
-//   const statCards: StatCard[] = [
-//     {
-//       title: 'Total Users',
-//       value: stats?.totalUsers || 0,
-//       icon: Users,
-//       trend: '+12% from last month',
-//       trendUp: true,
-//       color: 'bg-blue-500',
-//     },
-//     {
-//       title: 'Admin Users',
-//       value: stats?.adminCount || 0,
-//       icon: Users,
-//       color: 'bg-purple-500',
-//     },
-//     {
-//       title: 'Customers',
-//       value: stats?.customerCount || 0,
-//       icon: Users,
-//       trend: `+${stats?.newUsersThisMonth || 0} this month`,
-//       trendUp: true,
-//       color: 'bg-green-500',
-//     },
-//     {
-//       title: 'Active Users',
-//       value: stats?.activeUsers || 0,
-//       icon: TrendingUp,
-//       color: 'bg-orange-500',
-//     },
-//   ];
-
-//   return (
-//     <div className="space-y-6">
-//       {/* Page Header */}
-//       <div>
-//         <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-//         <p className="text-gray-600 mt-2">
-//           Welcome back! Here's what's happening with your platform today.
-//         </p>
-//       </div>
-
-//       {/* Stats Grid */}
-//       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-//         {statCards.map((card) => (
-//           <div
-//             key={card.title}
-//             className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
-//           >
-//             <div className="flex items-center justify-between">
-//               <div className="flex-1">
-//                 <p className="text-sm font-medium text-gray-600">{card.title}</p>
-//                 <p className="text-3xl font-bold text-gray-900 mt-2">
-//                   {card.value.toLocaleString()}
-//                 </p>
-//                 {card.trend && (
-//                   <p
-//                     className={`text-sm mt-2 flex items-center ${
-//                       card.trendUp ? 'text-green-600' : 'text-red-600'
-//                     }`}
-//                   >
-//                     <TrendingUp
-//                       className={`w-4 h-4 mr-1 ${
-//                         card.trendUp ? '' : 'rotate-180'
-//                       }`}
-//                     />
-//                     {card.trend}
-//                   </p>
-//                 )}
-//               </div>
-//               <div className={`${card.color} p-3 rounded-lg`}>
-//                 <card.icon className="w-6 h-6 text-white" />
-//               </div>
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Quick Actions */}
-//       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-//         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-//         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-//           <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors text-left">
-//             <Package className="w-8 h-8 text-primary-600 mb-2" />
-//             <h3 className="font-semibold text-gray-900">Add Product</h3>
-//             <p className="text-sm text-gray-600 mt-1">
-//               Add new products to your catalog
-//             </p>
-//           </button>
-          
-//           <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors text-left">
-//             <Users className="w-8 h-8 text-primary-600 mb-2" />
-//             <h3 className="font-semibold text-gray-900">Manage Users</h3>
-//             <p className="text-sm text-gray-600 mt-1">
-//               View and manage user accounts
-//             </p>
-//           </button>
-          
-//           <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors text-left">
-//             <ShoppingCart className="w-8 h-8 text-primary-600 mb-2" />
-//             <h3 className="font-semibold text-gray-900">View Orders</h3>
-//             <p className="text-sm text-gray-600 mt-1">
-//               Check recent orders and status
-//             </p>
-//           </button>
-//         </div>
-//       </div>
-
-//       {/* Recent Activity Placeholder */}
-//       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-//         <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
-//         <p className="text-gray-600 text-center py-8">
-//           Activity tracking will be implemented with order and product APIs
-//         </p>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-// File 48: src/pages/admin/dashboard/DashboardPage.tsx
+// File: src/pages/admin/dashboard/DashboardPage.tsx
 import { useEffect, useState } from 'react';
-import { Users, ShoppingCart, Package, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Users, 
+  TrendingUp, 
+  TrendingDown,
+  ShoppingBag,
+  UserPlus,
+  Activity,
+  Package,
+  ShoppingCart
+} from 'lucide-react';
 import { adminService } from '@/services/adminService';
 import toast from 'react-hot-toast';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -174,9 +24,11 @@ interface StatCard {
   trend?: string;
   trendUp?: boolean;
   color: string;
+  bgColor: string;
 }
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<UserStatistics | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -228,6 +80,19 @@ export default function DashboardPage() {
     });
   }, []);
 
+  // Navigation handlers
+  const handleAddProduct = () => {
+    navigate('/admin/products');
+  };
+
+  const handleManageUsers = () => {
+    navigate('/admin/users');
+  };
+
+  const handleViewOrders = () => {
+    navigate('/admin/orders');
+  };
+
   if (loading) {
     console.log('⏳ Showing loading spinner...');
     return <LoadingSpinner fullScreen />;
@@ -235,121 +100,184 @@ export default function DashboardPage() {
 
   console.log('🎨 Rendering dashboard with stats:', stats);
 
+  // Calculate dynamic percentages
+  const calculatePercentage = (part: number, total: number) => {
+    if (total === 0) return 0;
+    return Math.round((part / total) * 100);
+  };
+
   const statCards: StatCard[] = [
     {
       title: 'Total Users',
       value: stats?.totalUsers || 0,
       icon: Users,
-      trend: '+12% from last month',
+      trend: stats?.newUsersThisMonth ? `+${stats.newUsersThisMonth} this month` : undefined,
       trendUp: true,
-      color: 'bg-blue-500',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
     },
     {
       title: 'Admin Users',
       value: stats?.adminCount || 0,
-      icon: Users,
-      color: 'bg-purple-500',
+      icon: UserPlus,
+      trend: stats?.totalUsers ? `${calculatePercentage(stats.adminCount || 0, stats.totalUsers)}% of total` : undefined,
+      trendUp: true,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
     },
     {
       title: 'Customers',
       value: stats?.customerCount || 0,
-      icon: Users,
-      trend: `+${stats?.newUsersThisMonth || 0} this month`,
+      icon: ShoppingBag,
+      trend: stats?.totalUsers ? `${calculatePercentage(stats.customerCount || 0, stats.totalUsers)}% of total` : undefined,
       trendUp: true,
-      color: 'bg-green-500',
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
     },
     {
       title: 'Active Users',
       value: stats?.activeUsers || 0,
-      icon: TrendingUp,
-      color: 'bg-orange-500',
+      icon: Activity,
+      trend: stats?.totalUsers ? `${calculatePercentage(stats.activeUsers || 0, stats.totalUsers)}% active` : undefined,
+      trendUp: true,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
     },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-        <p className="text-gray-600 mt-2">
-          Welcome back! Here's what's happening with your platform today.
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Page Header */}
+        {/* <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1 sm:mt-2">
+            Welcome back! Here's what's happening with your platform today.
+          </p>
+        </div> */}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((card) => (
-          <div
-            key={card.title}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600">{card.title}</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {card.value.toLocaleString()}
-                </p>
-                {card.trend && (
-                  <p
-                    className={`text-sm mt-2 flex items-center ${
-                      card.trendUp ? 'text-green-600' : 'text-red-600'
-                    }`}
-                  >
-                    <TrendingUp
-                      className={`w-4 h-4 mr-1 ${
-                        card.trendUp ? '' : 'rotate-180'
-                      }`}
-                    />
-                    {card.trend}
+        {/* Stats Grid - All data from backend */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          {statCards.map((card) => (
+            <div
+              key={card.title}
+              className="bg-white rounded-xl p-5 sm:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm text-gray-500 mb-1 font-medium">
+                    {card.title}
                   </p>
-                )}
-              </div>
-              <div className={`${card.color} p-3 rounded-lg`}>
-                <card.icon className="w-6 h-6 text-white" />
+                  <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                    {typeof card.value === 'number' 
+                      ? card.value.toLocaleString() 
+                      : card.value}
+                  </h3>
+                  {card.trend && (
+                    <div className="flex items-center mt-2">
+                      {card.trendUp ? (
+                        <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-1" />
+                      ) : (
+                        <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 mr-1" />
+                      )}
+                      <span
+                        className={`text-xs sm:text-sm font-medium ${
+                          card.trendUp ? 'text-green-600' : 'text-red-600'
+                        }`}
+                      >
+                        {card.trend}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className={`${card.bgColor} p-2.5 sm:p-3 rounded-lg`}>
+                  <card.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${card.color}`} />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors text-left">
-            <Package className="w-8 h-8 text-primary-600 mb-2" />
-            <h3 className="font-semibold text-gray-900">Add Product</h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Add new products to your catalog
-            </p>
-          </button>
-          
-          <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors text-left">
-            <Users className="w-8 h-8 text-primary-600 mb-2" />
-            <h3 className="font-semibold text-gray-900">Manage Users</h3>
-            <p className="text-sm text-gray-600 mt-1">
-              View and manage user accounts
-            </p>
-          </button>
-          
-          <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors text-left">
-            <ShoppingCart className="w-8 h-8 text-primary-600 mb-2" />
-            <h3 className="font-semibold text-gray-900">View Orders</h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Check recent orders and status
-            </p>
-          </button>
+          ))}
         </div>
-      </div>
 
-      {/* Recent Activity Placeholder */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
-        <p className="text-gray-600 text-center py-8">
-          Activity tracking will be implemented with order and product APIs
-        </p>
+        {/* Quick Actions */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6 mb-6 sm:mb-8">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <button 
+              onClick={handleAddProduct}
+              className="group p-4 sm:p-5 border-2 border-gray-200 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition-all text-left"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="bg-indigo-100 group-hover:bg-indigo-200 p-2.5 rounded-lg transition-colors">
+                  <Package className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
+                </div>
+              </div>
+              <h3 className="font-semibold text-gray-900 text-sm sm:text-base mb-1">
+                Add Product
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-600">
+                Add new products to your catalog
+              </p>
+            </button>
+            
+            <button 
+              onClick={handleManageUsers}
+              className="group p-4 sm:p-5 border-2 border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all text-left"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="bg-green-100 group-hover:bg-green-200 p-2.5 rounded-lg transition-colors">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                </div>
+              </div>
+              <h3 className="font-semibold text-gray-900 text-sm sm:text-base mb-1">
+                Manage Users
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-600">
+                View and manage user accounts
+              </p>
+            </button>
+            
+            <button 
+              onClick={handleViewOrders}
+              className="group p-4 sm:p-5 border-2 border-gray-200 rounded-xl hover:border-orange-500 hover:bg-orange-50 transition-all text-left sm:col-span-2 lg:col-span-1"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="bg-orange-100 group-hover:bg-orange-200 p-2.5 rounded-lg transition-colors">
+                  <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
+                </div>
+              </div>
+              <h3 className="font-semibold text-gray-900 text-sm sm:text-base mb-1">
+                View Orders
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-600">
+                Check recent orders and status
+              </p>
+            </button>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+              Recent Activity
+            </h2>
+            <button className="text-xs sm:text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+              View all
+            </button>
+          </div>
+          
+          <div className="text-center py-12 sm:py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full mb-4">
+              <Activity className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+            </div>
+            <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
+              Activity tracking will be implemented with order and product APIs
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-
